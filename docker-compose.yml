@@ -1,0 +1,38 @@
+services:
+  frontend:
+    build: ./frontend
+    ports:
+      - 3000:3000
+  backend:
+    build: ./backend
+    ports:
+      - 3001:3001
+    environment:
+      DB_HOST: database
+      DB_PORT: 5432
+      DB_USER: postgres
+      DB_PASSWORD: secret
+      DB_NAME: tarefasdb
+    depends_on: # Depende da condição do database para prosseguir com a execução
+      database:
+        condition: service_healthy
+  database:
+    image: postgres
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: secret
+      POSTGRES_DB: tarefasdb
+    ports:
+      - 5432:5432
+    volumes:
+      - type: volume
+        source: pg_data
+        target: /var/lib/postgresql/data
+    healthcheck: # Monitora a inicialização do banco de dados
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  pg_data:
